@@ -38,17 +38,35 @@ app.get('/todos/:id',(req,res)=>{
     res.status(400).send();
   }
   var Todo = TodoConstruct.getTodoModel(mongoose.mongoose);
-  Todo.findById(id).then((docs)=>{
+  Todo.findById(id).then((todo)=>{
     if(!docs){
       res.status(404).send();
     }
-    res.send(docs);
+    res.send({todo});
   },(err)=>{
     red.status(400).send();
   }).catch((err)=>{
     res.status(400).send();
   });
-})
+});
+
+app.delete("/todos/:id",(req,res)=>{
+  var id = req.params.id;
+  if(!mongoose.mongoose.Types.ObjectId.isValid(id)){
+    res.status(400).send();
+  }
+  var Todo = TodoConstruct.getTodoModel(mongoose.mongoose);
+  Todo.findByIdAndRemove(id).then((todo)=>{
+    if(!todo){
+      res.status(404).send();
+    }
+    res.send({todo});
+  },(err)=>{
+    res.status(400).send();
+  }).catch((err)=>{
+    res.status(400).send();
+  });
+});
 
 app.listen(port,()=>{
   console.log(`started Todo API on port ${port}`);
