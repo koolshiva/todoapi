@@ -72,12 +72,11 @@ describe('GET /todos',()=>{
 
 describe('GET /todos/:id',()=>{
   it("should get a document by id from todos collection",(done)=>{
-    //console.log(`${todoTests[0]._id.toHexString()}`);
     supertest(server.app)
     .get(`/todos/${todoTests[0]._id.toHexString()}`)
     .expect(200)
     .expect((res)=>{
-      expect(res.body._id).toBe(`${todoTests[0]._id.toHexString()}`);
+      expect(res.body.todo._id).toBe(`${todoTests[0]._id.toHexString()}`);
     }).end((err,res)=>{
       if(err){
         return done(err);
@@ -95,6 +94,29 @@ describe('GET /todos/:id',()=>{
   it("should return 404 if todo id not found",(done)=>{
     supertest(server.app)
     .get('/todos/5a1a4dd4e92701cf87c688b92d')
+    .expect(400).end(done);
+  });
+});
+
+describe("DELETE /todos/:id",()=>{
+  it("should delete a todo that matches the given object id",(done)=>{
+    supertest(server.app)
+    .delete(`/todos/${todoTests[0]._id.toHexString()}`)
+    .expect(200)
+    .expect((res)=>{
+      expect(res.body.todo._id).toBe(`${todoTests[0]._id.toHexString()}`);
+    }).end(done);
+  });
+
+  it("should return a 404 when the requested valid id object is not found",(done)=>{
+    supertest(server.app)
+    .delete("/todos/5a1bb2e349c1de80749b434d")
+    .expect(404).end(done);
+  });
+
+  it("should return a 400 for an invalid input of object id",(done)=>{
+    supertest(server.app)
+    .delete("/todos/5a1bb2e349c1de80749b434d3d")
     .expect(400).end(done);
   });
 });

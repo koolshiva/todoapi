@@ -35,18 +35,22 @@ app.get('/todos',(req,res)=>{
 app.get('/todos/:id',(req,res)=>{
   var id = req.params.id;//5a1a4dd4e92701cf87c688b9
   if(!mongoose.mongoose.Types.ObjectId.isValid(id)){
+    console.log("i was called");
     res.status(400).send();
   }
   var Todo = TodoConstruct.getTodoModel(mongoose.mongoose);
+  console.log("didnt go in : ",id);
   Todo.findById(id).then((todo)=>{
-    if(!docs){
+    if(!todo){
       res.status(404).send();
     }
     res.send({todo});
   },(err)=>{
-    red.status(400).send();
-  }).catch((err)=>{
+    console.log("i was called1");
     res.status(400).send();
+  }).catch((err)=>{
+    console.log(req.params.id);
+    res.status(400).send(err);
   });
 });
 
@@ -61,10 +65,8 @@ app.delete("/todos/:id",(req,res)=>{
       res.status(404).send();
     }
     res.send({todo});
-  },(err)=>{
-    res.status(400).send();
   }).catch((err)=>{
-    res.status(400).send();
+    res.status(400).send(err);
   });
 });
 
