@@ -120,3 +120,35 @@ describe("DELETE /todos/:id",()=>{
     .expect(400).end(done);
   });
 });
+
+describe("PATCH /todos/:id",()=>{
+  var newTodoObj = {text:"only todo text"};
+  it("should find a todo by the given id and update with given text",(done)=>{
+    supertest(server.app)
+    .patch(`/todos/${todoTests[0]._id.toHexString()}`)
+    .send(newTodoObj)
+    .expect(200)
+    .expect((res)=>{
+      expect(res.body.todo.text).toBe(newTodoObj.text);
+    }).end(done);
+  });
+
+  it("should find a todo by given id and update text and completed fields",(done)=>{
+    newTodoObj.completed = true;
+    supertest(server.app)
+    .patch(`/todos/${todoTests[0]._id.toHexString()}`)
+    .send(newTodoObj)
+    .expect(200)
+    .expect((res)=>{
+      expect(res.body.todo.completedAt).toBeA('number');
+    }).end(done);
+  });
+
+  it("should return 404 if object id not found",(done)=>{
+    supertest(server.app)
+    .patch(`/todos/5a1bb2e349c1de80749b434d`)
+    .send(newTodoObj)
+    .expect(404)
+    .end(done);
+  });
+});
