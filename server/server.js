@@ -49,7 +49,6 @@ app.get('/todos/:id',(req,res)=>{
   },(err)=>{
     res.status(400).send();
   }).catch((err)=>{
-    console.log(req.params.id);
     res.status(400).send(err);
   });
 });
@@ -93,7 +92,6 @@ app.patch('/todos/:id',(req,res)=>{
       res.status(400).send();
     });
   }catch(e){
-    console.log(e);
     res.status(434).send({error:"There was a problem at the server in handling your request"});
   }
 });
@@ -105,19 +103,13 @@ app.post('/users',(req,res)=>{
 
   UserConstruct.saveUserDocument(newUser).then(()=>{
     token = newUser.getAuthToken();
-    console.log(token);
     newUser.tokens.push(token);
-    console.log(newUser);
     return UserConstruct.saveUserDocument(newUser);
-
   },(err)=>{
-    console.log(err);
     res.send(err);
   }).then(()=>{
-    //console.log(newUser);
     res.header('x-auth',token.token).send(newUser);
   }).catch((e)=>{
-    console.log(e);
     res.send(e);
   });
 });
@@ -126,7 +118,6 @@ var authenticate = (req,res,next)=>{
   var token = req.header('x-auth');
   var User = UserConstruct.getUserModel(mongoose.mongoose);
   User.findByToken(token).then((user)=>{
-    console.log(user);
     if(!user){
       return Promise.reject();
     }
@@ -134,7 +125,6 @@ var authenticate = (req,res,next)=>{
     req.token = token;
     next();
   }).catch((e)=>{
-    //console.log(e);
     res.status(401).send();
   });
 };
