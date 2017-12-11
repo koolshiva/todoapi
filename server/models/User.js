@@ -85,6 +85,15 @@ UserSchema.methods.getAuthToken = function(){
   });
 }
 
+UserSchema.methods.deleteToken = function(token){
+  var user = this;
+  return user.update({
+    $pull:{
+      tokens:{token}
+    }
+  });
+}
+
 UserSchema.pre('save',function(next){
   var user = this;
   var password = null,hash = null;
