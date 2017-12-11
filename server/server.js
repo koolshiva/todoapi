@@ -102,13 +102,21 @@ app.post('/users',(req,res)=>{
   var newUser = new User(user);
 
   UserConstruct.saveUserDocument(newUser).then(()=>{
-    token = newUser.getAuthToken();
-    newUser.tokens.push(token);
-    return UserConstruct.saveUserDocument(newUser);
-  },(err)=>{
-    res.status(400).send(err);
-  }).then(()=>{
-    res.header('x-auth',token.token).send(newUser);
+    return newUser.getAuthToken();
+  }).then((token)=>{
+    res.header('x-auth',token).send(newUser);
+  }).catch((e)=>{
+    res.status(400).send(e);
+  });
+});
+
+app.post('/users/login',(req,res)=>{
+  var email = req.body.email, password = req.body.password,token=null;
+  var User = UserConstruct.getUserModel(mongoose.mongoose);
+  User.findByCredentials(email,password).then((user)=>{
+    return user.getAuthToken().then((token)=>{
+      res.header('x-auth',token).send(user);
+    });
   }).catch((e)=>{
     res.send(e);
   });
