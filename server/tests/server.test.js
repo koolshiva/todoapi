@@ -56,7 +56,7 @@ describe('GET /todos',()=>{
     supertest(server.app)
     .get('/todos')
     .expect((res)=>{
-      expect(res.body.todos).toExist();
+      expect(res.body.todos).toBeTruthy();
     }).end(done);
   });
 });
@@ -131,7 +131,7 @@ describe("PATCH /todos/:id",()=>{
     .send(newTodoObj)
     .expect(200)
     .expect((res)=>{
-      expect(res.body.todo.completedAt).toBeA('number');
+      expect(typeof res.body.todo.completedAt).toBe('number');
     }).end(done);
   });
 
