@@ -13,10 +13,27 @@ var app = express();
 var port = process.env.PORT || 3000;
 app.use(bodyParser.json());
 
-app.post('/todos',(req,res)=>{
+
+var authenticate = (req,res,next)=>{
+  var token = req.header('x-auth');
+  var User = UserConstruct.getUserModel(mongoose.mongoose);
+  User.findByToken(token).then((user)=>{
+    if(!user){
+      return Promise.reject();
+    }
+    req.user = user;
+    req.token = token;
+    next();
+  }).catch((e)=>{
+    res.status(401).send();
+  });
+};
+
+app.post('/todos',authenticate,(req,res)=>{
   var Todo = TodoConstruct.getTodoModel(mongoose.mongoose);
   var newTodo = new Todo({
-    text:req.body.text
+    text:req.body.text,
+    _creator:req.user._id
   });
 
   TodoConstruct.saveTodoDocument(newTodo).then((doc)=>{
@@ -26,22 +43,27 @@ app.post('/todos',(req,res)=>{
   });
 });
 
-app.get('/todos',(req,res)=>{
+app.get('/todos',authenticate,(req,res)=>{
   var Todo = TodoConstruct.getTodoModel(mongoose.mongoose);
-  Todo.find().then((todos)=>{
+  Todo.find({
+    _creator:req.user._id
+  }).then((todos)=>{
     res.send({todos});
   },(err)=>{
     res.status(400).send(err);
   });
 });
 
-app.get('/todos/:id',(req,res)=>{
+app.get('/todos/:id',authenticate,(req,res)=>{
   var id = req.params.id;//5a1a4dd4e92701cf87c688b9
   if(!mongoose.mongoose.Types.ObjectId.isValid(id)){
     res.status(400).send();
   }
   var Todo = TodoConstruct.getTodoModel(mongoose.mongoose);
-  Todo.findById(id).then((todo)=>{
+  Todo.findOne({
+    _id:id,
+    _creator:req.user._id
+  }).then((todo)=>{
     if(!todo){
       res.status(404).send();
     }
@@ -59,7 +81,10 @@ app.delete("/todos/:id",(req,res)=>{
     res.status(400).send();
   }
   var Todo = TodoConstruct.getTodoModel(mongoose.mongoose);
-  Todo.findByIdAndRemove(id).then((todo)=>{
+  Todo.findOneAndRemove({
+    _id:id,
+    _creator:req.user._id
+  }).then((todo)=>{
     if(!todo){
       res.status(404).send();
     }
@@ -69,7 +94,7 @@ app.delete("/todos/:id",(req,res)=>{
   });
 });
 
-app.patch('/todos/:id',(req,res)=>{
+app.patch('/todos/:id',authenticate,(req,res)=>{
   try{
     var id = req.params.id,
     body = _.pick(req.body,['text','completed']);
@@ -83,7 +108,10 @@ app.patch('/todos/:id',(req,res)=>{
       body.completedAt = null;
     }
     var newTodo = TodoConstruct.getTodoModel(mongoose.mongoose);
-    newTodo.findByIdAndUpdate(id,{$set:body},{new:true}).then((todo)=>{
+    newTodo.findByOneAndUpdate({
+      _id:id,
+      _creator:req.user._id
+    },{$set:body},{new:true}).then((todo)=>{
       if(!todo){
         res.status(404).send();
       }
@@ -121,21 +149,6 @@ app.post('/users/login',(req,res)=>{
     res.send(e);
   });
 });
-
-var authenticate = (req,res,next)=>{
-  var token = req.header('x-auth');
-  var User = UserConstruct.getUserModel(mongoose.mongoose);
-  User.findByToken(token).then((user)=>{
-    if(!user){
-      return Promise.reject();
-    }
-    req.user = user;
-    req.token = token;
-    next();
-  }).catch((e)=>{
-    res.status(401).send();
-  });
-};
 
 app.get('/users/me',authenticate,(req,res)=>{
   res.send(req.user);

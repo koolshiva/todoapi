@@ -1,4 +1,5 @@
 var TodoModel = null;
+const mongoose = require('./../db/mongoose');
 
 getTodoModel = (mongoose)=>{
   if(TodoModel){
@@ -18,6 +19,10 @@ getTodoModel = (mongoose)=>{
       completedAt:{
         type:Number,
         default:null
+      },
+      _creator:{
+        required:true,
+        type:String
       }
     });
     return TodoModel;

@@ -8,9 +8,13 @@ var objectId2 = new mongoose.mongoose.Types.ObjectId();
 
 var todoTests = [
   {_id: new mongoose.mongoose.Types.ObjectId(),
-    text:"todo1"},
+    text:"todo1",
+    _creator:objectId1
+  },
   {_id: new mongoose.mongoose.Types.ObjectId(),
-    text:"Todo2"}
+    text:"Todo2",
+    _creator:objectId2
+  }
 ];
 
 var users = [
