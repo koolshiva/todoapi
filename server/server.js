@@ -106,7 +106,7 @@ app.post('/users',(req,res)=>{
     newUser.tokens.push(token);
     return UserConstruct.saveUserDocument(newUser);
   },(err)=>{
-    res.send(err);
+    res.status(400).send(err);
   }).then(()=>{
     res.header('x-auth',token.token).send(newUser);
   }).catch((e)=>{

@@ -4,20 +4,11 @@ const supertest = require('supertest');
 var server = require('./../server');
 var TodoConstruct = require('./../models/Todo');
 var mongoose = require('./../db/mongoose');
-var todoTests = [
-  {_id: new mongoose.mongoose.Types.ObjectId(),
-    text:"todo1"},
-  {_id: new mongoose.mongoose.Types.ObjectId(),
-    text:"Todo2"}
-];
-beforeEach((done)=>{
-  var Todo = TodoConstruct.getTodoModel(mongoose.mongoose);
-  Todo.remove({}).then((res)=>{
-    return Todo.insertMany(todoTests);
-  }).then(()=>{
-    done();
-  }).catch((e)=>done(e));
-});
+var seedTestData = require('./seed/seed.js');
+var todoTests = seedTestData.todoTests;
+var users = seedTestData.users;
+beforeEach(seedTestData.populateTodos);
+beforeEach(seedTestData.populateUsers);
 
 describe('POST /todos',()=>{
   it("should create a new todo document",(done)=>{
@@ -149,6 +140,62 @@ describe("PATCH /todos/:id",()=>{
     .patch(`/todos/5a1bb2e349c1de80749b434d`)
     .send(newTodoObj)
     .expect(404)
+    .end(done);
+  });
+});
+
+describe('GET /users/me',()=>{
+  it("should authenticate user with valid token header",(done)=>{
+    supertest(server.app)
+    .get('/users/me')
+    .set('x-auth',users[0].tokens[0].token)
+    .expect(200)
+    .expect((res)=>{
+      expect(res.body._id).toBe(users[0]._id.toHexString());
+      expect(res.body.email).toBe(users[0].email);
+    }).end(done);
+  });
+
+  it("should return a 401 if request doesn't contain a valid token",(done)=>{
+    supertest(server.app)
+    .get("/users/me")
+    .expect(401)
+    .expect((res)=>{
+      expect(res.body).toEqual({})
+    })
+    .end(done);
+  })
+});
+
+describe('POST /users',()=>{
+  it('should create a user',(done)=>{
+    var email = "newmail1@newmail.com",password = "1a2b3c";
+    supertest(server.app)
+    .post('/users')
+    .send({email,password})
+    .expect(200)
+    .expect((res)=>{
+      expect(res.body.email).toEqual(email);
+    }).end(done);
+  });
+
+  it('should return validation errors for invalid email',(done)=>{
+    var email = "newmail1newmail.com",password = "1a2b3c";
+    supertest(server.app)
+    .post('/users')
+    .send({email,password})
+    .expect(400)
+    .expect((res)=>{
+      expect(res.body.name).toEqual('ValidationError');
+    }).end(done);
+  });
+
+  it('should not create if email already in use',(done)=>{
+    var email = "newmail1@newmail.com",password = "1a2b3csd";
+    supertest(server.app)
+    .post('/users')
+    .send({email:"abc@123.com",password})
+    .expect(400)
     .end(done);
   });
 });
